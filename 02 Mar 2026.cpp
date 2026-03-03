@@ -102,3 +102,114 @@ public:
         return ans;
     }
 };
+//The code in new picture  complete again 
+// ==================== POORA PROBLEM SUMMARY ====================
+/*
+PROBLEM (10 saal ke bacche wala):
+Square grid hai. Rows ko sirf adjacent swap kar sakte hain.
+Goal: Har row i mein rightmost 1 ka column <= i hona chahiye
+( staircase trailing zeros ).
+Agar impossible toh -1 return karo.
+Minimum adjacent swaps batao.
+
+CORE SECRET (99% miss):
+Har row ka "power" = rightmost 1 ka index.
+Greedy: Har position i ke liye closest valid row lo.
+pos array mein bubble shift simulate karo (bubble sort jaisa).
+
+STEPS:
+1. pos[] precompute (right se left + break)
+2. For i=0 to n-1:
+   - Closest j >=i jiska pos[j] <= i
+   - ans += (j-i)
+   - Bubble shift pos[j..i]
+3. Agar koi i pe valid nahi mila → -1
+
+REAL-WORLD: Train wagons length ke hisaab se arrange + parking slots.
+
+REVISION TABLE (same as upar):
+Step | Action | Why
+Precompute | rightmost 1 | measure trailing zeros
+Greedy | closest j | min swaps
+Simulation | bubble shift | future correct
+
+MOTIVATION: Yeh master kar → GATE crack, financial independence, parents ka sacrifice respect.
+Ab code padh ke khud type kar!
+*/
+
+class Solution {
+public:
+    int minSwaps(vector<vector<int>>& grid) {
+       
+        // n = grid ka size (rows = columns, square matrix guaranteed)
+        // LeetCode mein n <= 100 → O(n^2) safe hai
+        // Pehle soch: n kya hai? Grid kitni badi?
+        int n = grid.size();
+       
+        // pos[i] = i-th row mein RIGHTMOST '1' ka column index
+        // Default -1 = pure zeros row → kahi bhi baith sakti hai (-1 <= har i)
+        // Yeh magic trick hai, 99% miss karte hain
+        vector<int> pos(n, -1); // sabko -1 se start (smart initialization)
+       
+        // ===================== PRECOMPUTE PHASE =====================
+        // Har row ka rightmost 1 dhoondho
+        // Right se left jaate hain kyunki jaise hi pehla 1 mila = rightmost!
+        // Break lagao → time bachao (repetition: left se jaate toh pura row traverse)
+        for (int i = 0; i < n; ++i) {
+            // j ko last column se shuru
+            // --j prefix decrement → CP fast style
+            for (int j = n - 1; j >= 0; --j) {
+                if (grid[i][j] == 1) {
+                    pos[i] = j; // store
+                    break; // IMPORTANT! No need aage dekhne ki
+                }
+            }
+            // Agar break nahi hua → pos[i] ab bhi -1 (all zeros)
+        }
+       
+        // Ab pos[] ready. Repeat mantra: pos[j] <= i means enough trailing zeros for position i
+       
+        int ans = 0; // total swaps count
+       
+        // ===================== MAIN GREEDY SIMULATION =====================
+        // Top se bottom har position i fix karo
+        // Soch: Kyun top se? Kyunki chhoti i ke liye strict condition (small i = kam trailing zeros allowed)
+        for (int i = 0; i < n; ++i) {
+           
+            // i-th position ke liye chahiye pos[j] <= i
+            int k = -1; // valid row index jo finally i pe baithne wali
+           
+            // i se end tak dekho, sabse pehli (closest) valid row lo
+            // Closest = minimum (j-i) swaps
+            for (int j = i; j < n; ++j) {
+                // MAGIC CONDITION repeat: pos[j] <= i
+                // -1 wali row hamesha valid
+                if (pos[j] <= i) {
+                    ans += (j - i); // bubble sort math: itne adjacent swaps
+                    k = j;
+                    break; // greedy, aage mat dekho
+                }
+            }
+           
+            // Kya valid row mili?
+            // ~k trick: ~(-1) = 0 (false), any positive ka ~ negative (true)
+            // Alternate: if(k != -1) bhi chalega lekin yeh CP style
+            if (~k) {
+                // Ab is row ko i tak bubble shift kar do pos array mein
+                // Kyun? Taaki agli i+1 ke liye candidates ka order sahi rahe
+                // Dry run repeat: jaise 3rd row ko 1st position pe laana = 2 shifts
+                for (int j = k; j > i; --j) {
+                    swap(pos[j], pos[j - 1]); // adjacent swap in our tracker array
+                }
+            }
+            else {
+                // Koi row nahi mila jo condition satisfy kare
+                // Matlab impossible
+                return -1;
+            }
+        }
+       
+        // Sab positions fill → return total swaps
+        return ans;
+    }
+};
